@@ -451,16 +451,15 @@ class TestSpiceKernelsCollectionSetIncrementTimes:
     @staticmethod
     def _plain_setup(**extra):
         """Return a _Setup for the except-block tests."""
-        attrs = dict(
-            pds_version="4",
-            args=MagicMock(faucet="plan"),
-            mission_start="2000-001T00:00:00.000Z",
-            mission_finish="2040-001T00:00:00.000Z",
-            mission_acronym="test",
-            bundle_directory="/fake/bundle",
-            staging_directory="/fake/staging",
-            date_format="maklabel",
-        )
+        attrs = {
+            'pds_version': "4",
+            'args': MagicMock(faucet="plan"),
+            'mission_start': "2000-001T00:00:00.000Z",
+            'mission_finish': "2040-001T00:00:00.000Z",
+            'mission_acronym':"test",
+            'bundle_directory':"/fake/bundle",
+            'staging_directory':"/fake/staging",
+            'date_format':"maklabel"}
         attrs.update(extra)
         return _Setup(**attrs)
 
