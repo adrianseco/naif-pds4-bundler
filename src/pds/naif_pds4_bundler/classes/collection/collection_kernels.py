@@ -310,7 +310,7 @@ class SpiceKernelsCollection(Collection):
         self.setup.increment_finish = increment_finish
         self.setup.increment_start = increment_start
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate the SPICE Kernels collection.
 
         The SPICE Kernels collection validation performs the following checks:
@@ -362,6 +362,8 @@ class SpiceKernelsCollection(Collection):
 
                 logging.error('   %s', product)
 
+                # TODO: this is a bug. The termination of the pipeline should happen
+                #       once all the "non_present_products" are reported.
                 handle_npb_error(
                     "Some products from the list are not present.",
                     setup=self.setup,
@@ -414,7 +416,7 @@ class SpiceKernelsCollection(Collection):
         # Exit the method if no products are present in collection
         #
         if not self.product:
-            return None
+            return
 
         #
         # Display the key elements of the labels for the user to do a visual
@@ -447,10 +449,12 @@ class SpiceKernelsCollection(Collection):
 
         elements_dict = dict.fromkeys(elements)
 
-        products = self.product
-        for product in products:
-            label_name = product.label.name
-            with open(label_name, "r", encoding='utf-8') as p:
+        #TODO: Possible bug: when executed in PDS3 mode, self.product may have (?)
+        #      a metakernel. In PDS3, metakernels are not labeled, but this loop
+        #      will attempt to open the label for reading, causing a
+        #      FileNotFoundError exception.
+        for product in self.product:
+            with open(product.label.name, "r", encoding='utf-8') as p:
                 for line in p:
                     for element in elements:
                         if element in line:
@@ -467,5 +471,3 @@ class SpiceKernelsCollection(Collection):
                 logging.info('   %s', element)
             logging.info('')
         logging.info('')
-
-        return None
