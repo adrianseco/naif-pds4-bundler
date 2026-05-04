@@ -40,7 +40,7 @@ class TestKernelListInit:
         self.read_config_mock = mocker.patch.object(KernelList, 'read_config', autospec=True)
 
     @pytest.mark.parametrize(['pds_version', 'dataset_i', 'dataset_o', 'volid_i', 'volid_o'], [
-        ('4', 'MAVEN-SPICE-KERNELS-V1.0', 'N/A', 'N/A', 'N/A'),
+        ('4', None, 'N/A', None, 'N/A'),
         ('3', '"maven-spice-kernels-v1.0"', 'MAVEN-SPICE-KERNELS-V1.0', 'maven_1001', 'maven_1001'),
         ('3', 'maven-spice-kernels-v1.0', 'MAVEN-SPICE-KERNELS-V1.0', 'maven_1001', 'maven_1001'),
         ('3', '"MAVEN-SPICE-KERNELS-V1.0"', 'MAVEN-SPICE-KERNELS-V1.0', 'MAVEN_1001', 'maven_1001'),
