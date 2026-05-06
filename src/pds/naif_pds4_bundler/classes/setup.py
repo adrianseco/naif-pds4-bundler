@@ -462,7 +462,7 @@ class Setup:
 
         if os.path.isdir(cwd + os.sep + self.staging_directory):
             self.staging_directory = (
-                cwd + os.sep + self.staging_directory + f"/{mission_dir}"
+                cwd + os.sep + self.staging_directory + os.sep + mission_dir
             )
 
         elif not os.path.isdir(self.staging_directory):
@@ -487,8 +487,8 @@ class Setup:
                         f"Staging directory cannot be created: {self.staging_directory}."
                     )
 
-        elif f"/{mission_dir}" not in self.staging_directory:
-            self.staging_directory += f"/{mission_dir}"
+        elif f"{os.sep}{mission_dir}" not in self.staging_directory:
+            self.staging_directory += os.sep + mission_dir
 
         if os.path.isdir(cwd + os.sep + self.bundle_directory):
             self.bundle_directory = cwd + os.sep + self.bundle_directory
@@ -560,7 +560,7 @@ class Setup:
                         )
                 else:
                     self.xml_model = (
-                        f"http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_{short_version}.sch"
+                        f"https://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_{short_version}.sch"
                     )
 
                     logging.info('-- Schema XML Model (xml_model) not provided '
@@ -585,8 +585,8 @@ class Setup:
                         )
                 else:
                     self.schema_location = (
-                        f"http://pds.nasa.gov/pds4/pds/v1 "
-                        f"http://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_{short_version}.xsd"
+                        f"https://pds.nasa.gov/pds4/pds/v1 "
+                        f"https://pds.nasa.gov/pds4/pds/v1/PDS4_PDS_{short_version}.xsd"
                     )
 
                     logging.info('-- Schema Location (schema_location) not '
@@ -651,6 +651,7 @@ class Setup:
                     try:
                         schema = schemas[i - 1]
                     except:
+                        # TODO: Code not reachable due to bug.
                         schema = schemas[0]
                 if config_schema >= schemas_eval[i]:
                     schema = schemas[i]
