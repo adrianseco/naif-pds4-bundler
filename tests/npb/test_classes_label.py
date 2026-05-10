@@ -83,7 +83,7 @@ def _make_setup_pds4(**kwargs):
     setup.mission_acronym = "test"
     setup.xml_model = "model"
     setup.schema_location = "schema"
-    setup.information_model = "1.14.0.0"
+    setup.information_model = ".".join(["1", "14", "0", "0"])
     setup.information_model_float = 1014000000.0
     setup.mission_name = "TestMission"
     setup.observer = "TestObserver"
@@ -330,7 +330,7 @@ class TestPDSLabelInit:
         label = PDSLabel(setup_pds3, product)
         assert label.targets == ['TestTarget', "TargetB", "TargetC"]
 
-    def test_pds4_sets_MISSIONS_OBSERVERS_TARGETS(self, mock_class_methods, setup_pds4, product):
+    def test_pds4_sets_missions_targets_observers(self, mock_class_methods, setup_pds4, product):
         setup_pds4.secondary_missions = ["MissionB", "MissionC"]
         setup_pds4.secondary_observers = ["ObsB", "ObsC"]
         setup_pds4.secondary_targets = ["TargetB", "TargetC"]
@@ -782,7 +782,7 @@ class TestPDSLabelCompare:
             label = PDSLabel.__new__(PDSLabel)
             label.setup = setup
             label.product = product
-            label.name = f"/staging/spice_kernels/ck/{label_name_part}.xml"
+            label.name = str(Path(f"/staging/spice_kernels/ck/{label_name_part}.xml"))
             return label
 
         return _build
