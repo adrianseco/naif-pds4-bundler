@@ -400,7 +400,9 @@ class PDSLabel:
         if "inventory" in label_name:
             label_name = label_name.replace("inventory_", "")
 
-        with open(label_name, "w+", encoding='utf-8') as f:
+        # Using newline guarantees that what we write into the file is what
+        # we intend to write, independently of the platform.
+        with open(label_name, "w+", encoding='utf-8', newline='') as f:
             with open(self.template, "r", encoding='utf-8') as t:
                 for line in t:
                     line = line.rstrip()
