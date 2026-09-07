@@ -34,6 +34,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from pds.naif_pds4_bundler.classes.exceptions import NPBInternalError
 from pds.naif_pds4_bundler.classes.label.pds4_bundle import BundlePDS4Label
 
 # Fully-qualified write_label target. Centralised so a relocation only needs
@@ -426,10 +427,11 @@ class TestBundlePDS4Label:
     # Edge cases
     # ------------------------------------------------------------------
 
-    def test_unknown_collection_name_raises_value_error(
+    def test_unknown_collection_name_raises_npbinternalerror(
             self, tmp_path: Path, helpers: SimpleNamespace) -> None:
         # An unrecognised collection.name fails fast with a descriptive
-        # ValueError instead of silently reading stale/missing scratch state.
+        # NPBInternalError instead of silently reading stale/missing scratch
+        # state.
         unknown = helpers.make_collection(
             name='unexpected_collection',
             lid='urn:nasa:pds:maven_spice:unexpected', updated=True)
@@ -440,10 +442,10 @@ class TestBundlePDS4Label:
         expected_message = (
             'NPB bug: the collection name unexpected_collection is not '
             'supported in PDS4 Bundle Label.')
-        with pytest.raises(ValueError, match=f'^{expected_message}$'):
+        with pytest.raises(NPBInternalError, match=f'^{expected_message}$'):
             _build_label(setup, readme)
 
-    def test_unknown_collection_name_after_known_collection_raises_value_error(
+    def test_unknown_collection_name_after_known_collection_raises_npbinternalerror(
             self, tmp_path: Path, helpers: SimpleNamespace) -> None:
         # An unrecognised collection.name following a recognised one must
         # still raise immediately, rather than silently reusing the
@@ -462,7 +464,7 @@ class TestBundlePDS4Label:
         expected_message = (
             'NPB bug: the collection name unexpected_collection is not '
             'supported in PDS4 Bundle Label.')
-        with pytest.raises(ValueError, match=f'^{expected_message}$'):
+        with pytest.raises(NPBInternalError, match=f'^{expected_message}$'):
             _build_label(setup, readme)
 
     @pytest.mark.parametrize('updated_value, expected_status', [

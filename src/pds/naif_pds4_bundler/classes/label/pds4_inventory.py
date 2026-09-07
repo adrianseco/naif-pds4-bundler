@@ -4,6 +4,7 @@ files.
 from pathlib import Path
 
 from .pds4_label import PDS4Label
+from ..exceptions import NPBInternalError
 
 
 class InventoryPDS4Label(PDS4Label):
@@ -55,8 +56,8 @@ class InventoryPDS4Label(PDS4Label):
             # Without a checksum product there is no time source for this
             # collection; fail loudly instead of IndexError below.
             if not start_times:
-                raise ValueError(
-                    f'NPB bug: no checksum product found in collection '
+                raise NPBInternalError(
+                    f'no checksum product found in collection '
                     f'{self.collection.lid}::{self.collection.vid}; START_TIME and '
                     f'STOP_TIME cannot be determined for the PDS4 Collection '
                     f'Inventory label.')

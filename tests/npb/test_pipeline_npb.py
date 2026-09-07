@@ -34,7 +34,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pds.naif_pds4_bundler.pipeline.npb import run_pipeline
-from pds.naif_pds4_bundler.classes.exceptions import NPBError
+from pds.naif_pds4_bundler.classes.exceptions import NPBError, NPBInternalError
 from pds.naif_pds4_bundler.utils.types.datatypes import PipelineArgs
 
 # Imported to create specified mocks that pass isinstance checks in Phase 12.
@@ -1588,3 +1588,20 @@ class TestNPBErrorHandling:
         mocks.Log.assert_not_called()
         mocks.Setup.return_value.write_file_list.assert_not_called()
         mocks.Setup.return_value.write_checksum_registry.assert_not_called()
+
+    def test_npb_internal_error_is_not_routed_to_handle_npb_error(self, mocks):
+        # NPBInternalError is a sibling of NPBError, not a subclass, so neither
+        # of run_pipeline's two `except NPBError` blocks (Block A around
+        # Setup(), Block B around everything else) can catch it. It must
+        # propagate straight out of run_pipeline uncaught, and none of Block B's
+        # cleanup (write_file_list/write_checksum_registry) should run -- unlike
+        # every NPBError-routed case above.
+        mocks.BundlePDS4Label.side_effect = NPBInternalError('bundle label is broken')
+        args = _args()
+
+        with pytest.raises(NPBInternalError, match='NPB bug: bundle label is broken'):
+            run_pipeline(args)
+
+        setup = mocks.Setup.return_value
+        setup.write_file_list.assert_not_called()
+        setup.write_checksum_registry.assert_not_called()

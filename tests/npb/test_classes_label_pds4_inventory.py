@@ -34,6 +34,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from pds.naif_pds4_bundler.classes.exceptions import NPBInternalError
 from pds.naif_pds4_bundler.classes.label.pds4_inventory import InventoryPDS4Label
 
 
@@ -377,11 +378,11 @@ class TestInventoryPDS4Label:
         assert label._label_fields["START_TIME"] == '2024-01-01T00:00:00'
         assert label._label_fields["STOP_TIME"] == '2024-01-31T00:00:00'
 
-    def test_miscellaneous_branch_without_checksums_raises_value_error(
+    def test_miscellaneous_branch_without_checksums_raises_npbinternalerror(
             self, tmp_path: Path, helpers: SimpleNamespace) -> None:
         # For the 'miscellaneous' collection, when no product name contains
-        # 'checksum', there is no time source: the constructor now raises a
-        # descriptive ValueError instead of IndexError.
+        # 'checksum', there is no time source: the constructor raises a
+        # descriptive NPBInternalError instead of IndexError.
         setup = helpers.make_setup()
         staging = tmp_path / 'staging'
         inventory = helpers.make_inventory(
@@ -406,14 +407,14 @@ class TestInventoryPDS4Label:
             # Wiring happens before the assertion block so pytest.raises only
             # wraps the call actually expected to raise.
             inventory.setup = setup
-            with pytest.raises(ValueError, match=f'^{expected_message}$'):
+            with pytest.raises(NPBInternalError, match=f'^{expected_message}$'):
                 InventoryPDS4Label(inventory, collection)
 
-    def test_miscellaneous_branch_with_empty_product_list_raises_value_error(
+    def test_miscellaneous_branch_with_empty_product_list_raises_npbinternalerror(
             self, tmp_path: Path, helpers: SimpleNamespace) -> None:
         # Same root cause as above but with an entirely empty
         # collection.product list: the empty start_times still triggers the
-        # descriptive ValueError.
+        # descriptive NPBInternalError.
         setup = helpers.make_setup()
         staging = tmp_path / 'staging'
         inventory = helpers.make_inventory(
@@ -433,7 +434,7 @@ class TestInventoryPDS4Label:
             # Wiring happens before the assertion block so pytest.raises only
             # wraps the call actually expected to raise.
             inventory.setup = setup
-            with pytest.raises(ValueError, match=f'^{expected_message}$'):
+            with pytest.raises(NPBInternalError, match=f'^{expected_message}$'):
                 InventoryPDS4Label(inventory, collection)
 
     # ------------------------------------------------------------------

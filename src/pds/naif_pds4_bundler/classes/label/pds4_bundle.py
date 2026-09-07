@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from .pds4_label import PDS4Label
+from ..exceptions import NPBInternalError
 
 
 class BundlePDS4Label(PDS4Label):
@@ -59,8 +60,8 @@ class BundlePDS4Label(PDS4Label):
                 coll_name = "miscellaneous" if self.setup.information_model_float >= 1011001000.0 else "member"
 
             else:
-                raise ValueError(
-                    f'NPB bug: the collection name {collection.name} is not '
+                raise NPBInternalError(
+                    f'the collection name {collection.name} is not '
                     f'supported in PDS4 Bundle Label.')
 
             # coll_lidvid/coll_status are scratch, local to this iteration --
