@@ -135,7 +135,7 @@ class Collection:
         If the collection has been updated we obtain the increased version, but
         if it has not been updated we use the previous version.
 
-        Given the case that he version cannot be determined: if it is the SPICE
+        Given the case that the version cannot be determined: if it is the SPICE
         kernels collection assume is the same version as the bundle, otherwise
         we set it to 1.
         """

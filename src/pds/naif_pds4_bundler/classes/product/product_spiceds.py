@@ -34,18 +34,13 @@ class SpicedsProduct(Product):
         if not spiceds:
             logging.info("-- No spiceds file provided.")
 
-        #
-        # Obtain the previous spiceds file if it exists
-        #
-        path = (
-            Path(setup.bundle_directory)
-            / f"{setup.mission_acronym}_spice"
-            / collection.name
-        )
-
         if self.setup.increment:
+
+            # Obtain the previous spiceds file if it exists
             latest_spiceds, latest_version = find_latest_versioned_file(
-                [path], "spiceds_v*.html"
+                paths=[Path(setup.bundle_directory)
+                       / f"{setup.mission_acronym}_spice" / collection.name],
+                pattern="spiceds_v*.html"
             )
 
             # latest_version is None either when no file matched, or when a file

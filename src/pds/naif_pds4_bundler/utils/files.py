@@ -571,11 +571,7 @@ def find_latest_versioned_file(
              ``"_v<digits>"`` pattern.
     :rtype: tuple[Optional[Path], Optional[int]]
     """
-    candidates = [
-        Path(match)
-        for directory in paths
-        for match in Path(directory).glob(pattern)
-    ]
+    candidates = [Path(match) for directory in paths for match in directory.glob(pattern)]
 
     # Matches the digits after "_v" only when they reach the end of the
     # stem (Path.stem has already stripped the file's extension).
