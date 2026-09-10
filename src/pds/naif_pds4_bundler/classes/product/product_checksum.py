@@ -192,7 +192,8 @@ class ChecksumProduct(Product):
                     #
                     try:
                         (md5_file, filename) = line.split()
-                    except BaseException:
+
+                    except Exception:
                         raise NPBError(
                             f"Checksum file {self.path_current} is corrupted."
                         )
@@ -558,7 +559,8 @@ class ChecksumProduct(Product):
                 self.setup.working_directory,
                 self.setup.diff,
             )
-        except BaseException:
+
+        except Exception:
             logging.warning("-- Checksum from previous increment does not exist.")
 
         logging.info("")

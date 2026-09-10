@@ -95,7 +95,8 @@ class MetaKernelProduct(Product):
                 if "YEAR" in values:
                     self.year = values["YEAR"]
                     self.YEAR = values["YEAR"]
-            except BaseException:
+
+            except Exception:
                 pass
 
         if not hasattr(self, "mk_setup"):
@@ -318,7 +319,9 @@ class MetaKernelProduct(Product):
         """
         try:
             product_vid = str(self.version).lstrip("0") + ".0"
-        except BaseException:
+
+        except Exception:
+
             logging.warning(
                 '-- %s No VID explicit in kernel name: set to 1.0', self.name)
             logging.warning(
@@ -350,9 +353,11 @@ class MetaKernelProduct(Product):
             if pattern.match(kernel):
 
                 description = self.json_config[pattern.pattern]["description"]
+
                 try:
                     patterns = self.json_config[pattern.pattern]["patterns"]
-                except BaseException:
+
+                except Exception:
                     patterns = False
                 # try:
                 #     options = self.json_config[pattern.pattern]["mklabel_options"]
@@ -574,7 +579,9 @@ class MetaKernelProduct(Product):
                                 f"_spice/spice_kernels/mk/"
                                 f'{self.name.split("_v")[0]}*.tm'
                             )
-                        except BaseException:
+
+                        except Exception:
+
                             if self.setup.increment:
                                 logging.warning(
                                     "-- No meta-kernels from "
@@ -768,7 +775,8 @@ class MetaKernelProduct(Product):
                                 logging.warning(
                                     "-- Meta-kernel edited with Vi by the user."
                                 )
-                            except BaseException:
+
+                            except Exception:
                                 print("Vi text editor is not available.")
                                 input(">> Press Enter to continue... ")
 
@@ -801,7 +809,7 @@ class MetaKernelProduct(Product):
             if not val_mk:
                 raise Exception("No label for comparison found.")
 
-        except BaseException:
+        except Exception:
             #
             # If previous increment does not work, compare with the MK
             # template.
@@ -863,7 +871,7 @@ class MetaKernelProduct(Product):
                     "present in meta-kernel.",
                 )
 
-        except BaseException:
+        except Exception:
             logging.error("-- The MK could not be loaded with the SPICE API FURNSH.")
 
         spiceypy.kclear()
@@ -1022,7 +1030,7 @@ class MetaKernelProduct(Product):
             stop_time = spiceypy.et2utc(max(finish_times), "ISOC", 3, 80) + "Z"
             logging.info('-- Meta-kernel coverage: %s - %s', start_time, stop_time)
 
-        except BaseException:
+        except Exception:
             #
             # The alternative is to set the increment times to the increment
             # or mission times provided via configuration.

@@ -189,7 +189,7 @@ class SpiceKernelsCollection(Collection):
             increment_start = min(increment_starts)
             increment_finish = max(increment_finishs)
 
-        except BaseException:
+        except Exception:
             #
             # If no MKs are provided in the increment. First check if an
             # increment stop time has been provided as an input
@@ -282,7 +282,7 @@ class SpiceKernelsCollection(Collection):
                 increment_finish = prev_increment_finish
                 logging.warning("-- Increment finish corrected form previous bundle.")
 
-        except BaseException:
+        except Exception:
             logging.warning("-- Previous bundle not found.")
 
         #
@@ -296,7 +296,8 @@ class SpiceKernelsCollection(Collection):
                 spiceypy.utc2et(increment_finish[:-1]),
                 self.setup.date_format,
             )
-        except BaseException:
+
+        except Exception:
             logging.warning(
                 "-- A leapseconds kernel (LSK) has not been loaded. "
                 "Increment start/finish times will not be corrected."
