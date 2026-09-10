@@ -2,6 +2,7 @@
 """
 import logging
 import os
+import re
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -40,6 +41,23 @@ def _make_collection(name="miscellaneous"):
     return collection
 
 
+# The expected "previous checksum file" candidate. Built by joining path
+# segments (never embedding "/" inside a string literal) so it's correct on both
+# POSIX and Windows. Kept as a Path -- comparisons against obj.path_current
+# (also a Path) use Path.__eq__, which compares parsed path parts rather than
+# separator-sensitive strings. str(PREV_CHECKSUM_PATH) is used only where an
+# actual string is required: standing in for a Path.glob() match (a plain str
+# works too, since find_latest_versioned_file wraps every match in Path()), or
+# building a regex.
+PREV_CHECKSUM_PATH = Path("bundle", "em16_spice", "miscellaneous",
+                          "checksum", "checksum_v001.tab")
+
+# NPBError embeds str(self.path_current) (a Path) in its message, so this is
+# escaped once here for reuse in pytest.raises(match=...) regexes below --
+# on Windows str(PREV_CHECKSUM_PATH) contains backslashes, which would
+# otherwise be read as regex escape sequences instead of literal separators.
+PREV_CHECKSUM_PATH_ESCAPED = re.escape(str(PREV_CHECKSUM_PATH))
+
 # ---------------------------------------------------------------------------
 # Patch targets (relative to the module under test)
 # ---------------------------------------------------------------------------
@@ -47,7 +65,9 @@ MOD = "pds.naif_pds4_bundler.classes.product.product_checksum"
 
 PATCHES = dict(
     safe_make_directory=f"{MOD}.safe_make_directory",
-    glob_glob=f"{MOD}.glob.glob",
+    # find_latest_versioned_file globs candidates itself via Path.glob, so
+    # that's what's patched here instead of anything in this module.
+    glob_glob="pathlib.Path.glob",
     md5=f"{MOD}.md5",
     checksum_from_registry=f"{MOD}.checksum_from_registry",
     checksum_from_label=f"{MOD}.checksum_from_label",
@@ -93,6 +113,10 @@ def _build_pds4(
          patch(PATCHES["os_walk"], return_value=[]) as m_walk, \
          patch("builtins.open", mock_open(read_data="")) as m_open:
 
+        # find_latest_versioned_file globs two patterns (bundle + staging
+        # dir) and pools the results, so this mock is hit twice per call;
+        # returning the same glob_files both times is harmless here since
+        # duplicates don't change which entry sorts last.
         m_glob.return_value = glob_files
 
         obj = ChecksumProduct(setup, collection, add_previous_checksum)
@@ -153,11 +177,15 @@ class TestChecksumProductInit:
         assert obj.version == 1
 
     def test_init_pds4_increment_with_previous_file_increments_version(self):
-        prev = "/bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab"
+        prev = str(PREV_CHECKSUM_PATH)
         obj, _ = _build_pds4(increment=True, glob_files=[prev])
         assert obj.version == 2
         assert obj.name == "checksum_v002.tab"
-        assert obj.path_current == prev
+
+        # path_current is a Path when a previous file was found. Compare as
+        # Path == Path (parsed parts), not string equality, so this doesn't
+        # depend on separator style.
+        assert obj.path_current == PREV_CHECKSUM_PATH
         assert obj.vid == "2.0"
 
     def test_init_pds4_creates_checksum_directory(self):
@@ -200,15 +228,23 @@ class TestChecksumProductInit:
         assert not hasattr(obj, "lid")
 
     def test_init_pds4_multiple_glob_files_picks_latest(self):
+        # "checksum_v9.tab" sorts *after* "checksum_v10.tab" and
+        # "checksum_v2.tab" lexically (since "9" > "1" and "9" > "2" at
+        # that character position), even though 9 is numerically the
+        # smallest. This pins find_latest_versioned_file's numeric (not
+        # lexical) comparison, per commit 9275b96.
         files = [
-            "/bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab",
-            "/bundle/em16_spice/miscellaneous/checksum/checksum_v003.tab",
-            "/bundle/em16_spice/miscellaneous/checksum/checksum_v002.tab",
+            str(PREV_CHECKSUM_PATH.parent / "checksum_v2.tab"),
+            str(PREV_CHECKSUM_PATH.parent / "checksum_v10.tab"),
+            str(PREV_CHECKSUM_PATH.parent / "checksum_v9.tab"),
         ]
-        # glob.glob returns unsorted; ChecksumProduct sorts internally.
+
+        # Path.glob returns unsorted; find_latest_versioned_file picks by
+        # numeric version, not list order or lexical string order.
         obj, _ = _build_pds4(increment=True, glob_files=files)
-        # Latest sorted is v003 → new version is 4
-        assert obj.version == 4
+        assert obj.version == 11
+        assert obj.name == "checksum_v011.tab"
+        assert obj.path_current == PREV_CHECKSUM_PATH.parent / "checksum_v10.tab"
 
 
 # ===========================================================================
@@ -222,7 +258,7 @@ class TestReadCurrentProduct:
 
         setup = _make_setup(pds_version="4", increment=True)
         collection = _make_collection()
-        prev = "/bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab"
+        prev = str(PREV_CHECKSUM_PATH)
         prev_content = ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa some/file.tab\n"
                         "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb other/file.xml\n")
 
@@ -239,16 +275,16 @@ class TestReadCurrentProduct:
 
     @pytest.mark.parametrize('bad_content, error', [
         ("this_line_has_no_space_split\n",
-         'Checksum file /bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab is corrupted.'),
+         f'Checksum file {PREV_CHECKSUM_PATH_ESCAPED} is corrupted.'),
         ("0123456789  some/file.tab\n",
-         'Checksum file /bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab '
+         f'Checksum file {PREV_CHECKSUM_PATH_ESCAPED} '
          'corrupted entry: 0123456789  some/file.tab\n.')
     ])
     def test_corrupted_line_raises_npberror(self, bad_content, error) -> None:
 
         setup = _make_setup(pds_version="4", increment=True)
         collection = _make_collection()
-        prev = "/bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab"
+        prev = str(PREV_CHECKSUM_PATH)
 
         with patch(PATCHES["safe_make_directory"]), \
              patch(PATCHES["glob_glob"], return_value=[prev]), \
@@ -263,7 +299,7 @@ class TestReadCurrentProduct:
 
         setup = _make_setup(pds_version="4", increment=True)
         collection = _make_collection()
-        prev = "/bundle/em16_spice/miscellaneous/checksum/checksum_v001.tab"
+        prev = str(PREV_CHECKSUM_PATH)
         prev_content = "a" * 32 + "  some/file.tab\n"
 
         with patch(PATCHES["safe_make_directory"]), \

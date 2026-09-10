@@ -750,6 +750,71 @@ def test_fill_template(tmp_path, contents, dct, expected):
     assert result == expected
 
 # ----------------------------------------------------------------------------
+# files.find_latest_versioned_file tests
+# ----------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("filenames, pattern, expected_name, expected_version", [
+    # The highest version wins even when it isn't the last file created.
+    (["checksum_v010.tab", "checksum_v002.tab", "checksum_v001.tab"],
+     "checksum_v*.tab", "checksum_v010.tab", 10),
+    # Versions are compared numerically, not lexically: "_v10" beats "_v9"
+    # even though "9" sorts after "1" as characters.
+    (["checksum_v9.tab", "checksum_v10.tab"],
+     "checksum_v*.tab", "checksum_v10.tab", 10),
+    # No candidate's filename ends in "_v<digits>": the only match is
+    # returned with an unknown version instead of nothing.
+    (["checksum_no_version.tab"],
+     "checksum_no_version.tab", "checksum_no_version.tab", None),
+    # A non-matching filename in the pool is skipped, not picked as a
+    # fallback winner: the one real match still wins.
+    (["readme.txt", "checksum_v003.tab"], "*", "checksum_v003.tab", 3),
+])
+def test_find_latest_versioned_file(tmp_path, filenames, pattern, expected_name, expected_version):
+    """find_latest_versioned_file globs `pattern` under each given directory,
+    compares matches by the version parsed from their filename stem, and
+    returns the numerically highest one, falling back to (None, None) or
+    (candidates[0], None) when nothing matches.
+    """
+    for name in filenames:
+        (tmp_path / name).write_text("")
+
+    path, version = files.find_latest_versioned_file([tmp_path], pattern)
+
+    assert path == tmp_path / expected_name
+    assert version == expected_version
+
+
+def test_find_latest_versioned_file_directory_does_not_affect_comparison(tmp_path):
+    """A candidate's directory never affects the comparison: "aaa_staging" sorts
+    before "bundle_zzz" lexically, but its file has the higher version and still
+    wins.
+    """
+    bundle_zzz = tmp_path / "bundle_zzz"
+    aaa_staging = tmp_path / "aaa_staging"
+    bundle_zzz.mkdir()
+    aaa_staging.mkdir()
+    (bundle_zzz / "inventory_v001.csv").write_text("")
+    (aaa_staging / "inventory_v010.csv").write_text("")
+
+    path, version = files.find_latest_versioned_file(
+        [bundle_zzz, aaa_staging], "inventory_v*.csv"
+    )
+
+    assert path == aaa_staging / "inventory_v010.csv"
+    assert version == 10
+
+
+def test_find_latest_versioned_file_no_candidates(tmp_path):
+    """No file matches `pattern` in any of the given directories: returns
+    (None, None).
+    """
+    path, version = files.find_latest_versioned_file([tmp_path], "checksum_v*.tab")
+
+    assert path is None
+    assert version is None
+
+# ----------------------------------------------------------------------------
 # files.format_multiple_values tests
 # ----------------------------------------------------------------------------
 
