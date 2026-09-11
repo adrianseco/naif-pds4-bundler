@@ -1346,6 +1346,24 @@ class TestMetaKernelProductWriteProduct:
         captured = capsys.readouterr()
         assert "not available" in captured.out
 
+    def test_interrupt_to_update_vi_keyboard_interrupt_prompts_fallback(
+            self, tmp_path, capsys):
+        product = self._make_stub(tmp_path)
+        product.setup.args.debug = False
+        product.mk_setup["interrupt_to_update"] = "true"
+
+        input_returns = iter(["vi", ""])
+        with (
+            patch(f"{_MODULE}.get_latest_kernel", return_value=[]),
+            patch("builtins.input", side_effect=input_returns),
+            patch(f"{_MODULE}.subprocess.call",
+                  side_effect=KeyboardInterrupt),
+        ):
+            product.write_product()  # must not raise
+
+        captured = capsys.readouterr()
+        assert "not available" in captured.out
+
     @pytest.mark.parametrize("debug, itu_value", [
         (True, "true"),    # key present but debug=True bypasses the block
         (False, None),     # key absent

@@ -359,14 +359,6 @@ class MetaKernelProduct(Product):
 
                 except Exception:
                     patterns = False
-                # try:
-                #     options = self.json_config[pattern.pattern]["mklabel_options"]
-                # except BaseException:
-                #     options = ""
-                # try:
-                #     mapping = self.json_config[pattern.pattern]["mapping"]
-                # except BaseException:
-                #     mapping = ""
 
                 #
                 # ``options'' and ``descriptions'' require substituting
@@ -776,7 +768,13 @@ class MetaKernelProduct(Product):
                                     "-- Meta-kernel edited with Vi by the user."
                                 )
 
-                            except Exception:
+                            # Deliberately kept as BaseException: this wraps an
+                            # interactive editor subprocess the user may
+                            # legitimately Ctrl-C out of, and narrowing to
+                            # Exception would let KeyboardInterrupt propagate
+                            # and abort the whole pipeline instead of just
+                            # cancelling the edit.
+                            except BaseException:
                                 print("Vi text editor is not available.")
                                 input(">> Press Enter to continue... ")
 
