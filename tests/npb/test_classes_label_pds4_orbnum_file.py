@@ -836,6 +836,11 @@ TEMPLATE_CONTENT = (
 class TestOrbnumFilePDS4LabelIntegration:
     """Integration tests for OrbnumFilePDS4Label + PDSLabel + template."""
 
+    def test_context_from_product_attribute_is_true(self):
+        """Guards against a silent regression if this class is renamed
+        without carrying the attribute over."""
+        assert OrbnumFilePDS4Label._context_from_product is True
+
     # ------------------------------------------------------------------
     # Fixtures
     # ------------------------------------------------------------------

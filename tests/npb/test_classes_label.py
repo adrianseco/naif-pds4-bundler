@@ -10,10 +10,6 @@ from unittest.mock import call, mock_open
 import pytest
 
 from pds.naif_pds4_bundler.classes.label.label import PDSLabel
-from pds.naif_pds4_bundler.classes.label.pds3_spice_kernel import SpiceKernelPDS3Label
-from pds.naif_pds4_bundler.classes.label.pds4_metakernel import MetaKernelPDS4Label
-from pds.naif_pds4_bundler.classes.label.pds4_orbnum_file import OrbnumFilePDS4Label
-from pds.naif_pds4_bundler.classes.label.pds4_spice_kernel import SpiceKernelPDS4Label
 
 # Patch targets — resolved to where the names are looked up inside label.py
 _PATCH_ADD_CR = "pds.naif_pds4_bundler.classes.label.label.add_carriage_return"
@@ -862,35 +858,22 @@ class TestPDSLabelCompareHelpers:
 
 
 # ===========================================================================
-# Leaf-class context/logging attributes
+# PDSLabel context/logging attribute defaults
 # ===========================================================================
-# Direct checks against the real classes: these fail immediately if a class
-# is renamed and the attribute isn't carried over, or if a new leaf class is
-# added without declaring it (the parametrize table would need a new row,
-# making the omission visible in review instead of silent at runtime).
+# Each leaf class's own override of these attributes is pinned in that
+# class's own test file instead of here.
 
-class TestLeafClassContextAttributes:
-    """Pin _context_from_product/_trailing_blank_log on PDSLabel and on
-    every leaf class that overrides them."""
+class TestPDSLabelContextAttributeDefaults:
+    """Pin the base PDSLabel defaults for _context_from_product/
+    _trailing_blank_log."""
 
     @pytest.mark.parametrize(
-        ["cls", "attr", "expected"],
+        ["attr", "expected"],
         [
-            (PDSLabel, "_context_from_product", False),
-            (PDSLabel, "_trailing_blank_log", True),
-            (SpiceKernelPDS4Label, "_context_from_product", True),
-            (MetaKernelPDS4Label, "_context_from_product", True),
-            (OrbnumFilePDS4Label, "_context_from_product", True),
-            (SpiceKernelPDS3Label, "_trailing_blank_log", False),
+            ("_context_from_product", False),
+            ("_trailing_blank_log", True),
         ],
-        ids=[
-            "PDSLabel-context-default-False",
-            "PDSLabel-trailing-log-default-True",
-            "SpiceKernelPDS4Label-context-True",
-            "MetaKernelPDS4Label-context-True",
-            "OrbnumFilePDS4Label-context-True",
-            "SpiceKernelPDS3Label-trailing-log-False",
-        ],
+        ids=["context-default-False", "trailing-log-default-True"],
     )
-    def test_leaf_class_attribute(self, cls, attr, expected):
-        assert getattr(cls, attr) is expected
+    def test_default_attribute(self, attr, expected):
+        assert getattr(PDSLabel, attr) is expected

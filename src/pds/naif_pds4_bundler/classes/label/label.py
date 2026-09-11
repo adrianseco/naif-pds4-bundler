@@ -17,8 +17,8 @@ class PDSLabel:
     _eol: str
     _template: str
 
-    # Whether missions/observers/targets come from the product itself (leaf PDS4
-    # kernel/metakernel/orbnum labels) instead of from setup.
+    # Whether missions/observers/targets come from the product itself instead
+    # of from setup.
     _context_from_product: bool = False
 
     # Whether write_label() emits a trailing blank logging.info("") line.

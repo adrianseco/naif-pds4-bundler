@@ -106,6 +106,11 @@ def _build_label(product, extra_setup=None):
 class TestSpiceKernelPDS3LabelInit:
     """Tests for SpiceKernelPDS3Label.__init__."""
 
+    def test_trailing_blank_log_attribute_is_false(self):
+        """Guards against a silent regression if this class is renamed
+        without carrying the attribute over."""
+        assert SpiceKernelPDS3Label._trailing_blank_log is False
+
     def test_template_path_set(self):
         """__init__ points self._template at the kernel label template file."""
         label = _build_label(_make_product("SPK"))

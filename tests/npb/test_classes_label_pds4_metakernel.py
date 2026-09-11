@@ -556,6 +556,11 @@ TEMPLATE_CONTENT = (
 class TestMetaKernelPDS4LabelIntegration:
     """Integration tests for MetaKernelPDS4Label + PDSLabel + template."""
 
+    def test_context_from_product_attribute_is_true(self):
+        """Guards against a silent regression if this class is renamed
+        without carrying the attribute over."""
+        assert MetaKernelPDS4Label._context_from_product is True
+
     # ------------------------------------------------------------------
     # Fixtures
     # ------------------------------------------------------------------
