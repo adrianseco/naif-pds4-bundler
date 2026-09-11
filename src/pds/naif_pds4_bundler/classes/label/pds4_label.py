@@ -34,7 +34,7 @@ class PDS4Label(PDSLabel):
         try:
             self._context_products = product.collection.bundle.context_products
 
-        except BaseException:
+        except Exception:
             self._context_products = product.bundle.context_products
 
         # Fixed PDS4 header fields that come straight from setup.

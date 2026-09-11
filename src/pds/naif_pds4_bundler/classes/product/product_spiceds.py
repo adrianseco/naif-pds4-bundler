@@ -26,9 +26,11 @@ class SpicedsProduct(Product):
         self.setup = setup
         self.collection = collection
         self.new_product = True
+
         try:
             spiceds = self.setup.spiceds
-        except BaseException:
+
+        except Exception:
             spiceds = ""
 
         if not spiceds:

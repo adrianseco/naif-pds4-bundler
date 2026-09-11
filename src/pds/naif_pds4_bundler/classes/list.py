@@ -126,19 +126,24 @@ class KernelList:
                         # Description is the only mandatory field.
                         #
                         description = self.json_config[pattern.pattern]["description"]
+
                         try:
                             options = self.json_config[pattern.pattern][
                                 "mklabel_options"
                             ]
-                        except BaseException:
+
+                        except Exception:
                             options = ""
+
                         try:
                             patterns = self.json_config[pattern.pattern]["patterns"]
-                        except BaseException:
+
+                        except Exception:
                             patterns = False
+
                         try:
                             mapping = self.json_config[pattern.pattern]["mapping"]
-                        except BaseException:
+                        except Exception:
                             mapping = ""
 
                         #
@@ -656,7 +661,8 @@ class KernelList:
                 tofile = kernel_lists[-2]
                 work_dir = self.setup.working_directory
                 compare_files(fromfile, tofile, work_dir, self.setup.diff)
-            except BaseException:
+
+            except Exception:
                 logging.error("-- Previous list not available.")
 
     def validate_complete(self):
@@ -850,7 +856,9 @@ class KernelList:
                             if product == ker
                         ]
                         origin_paths.append(file[0])
-                    except BaseException:
+
+                    except Exception:
+
                         try:
                             file = [
                                 os.path.join(root, ker)
@@ -860,7 +868,8 @@ class KernelList:
                                 == ker
                             ]
                             origin_paths.append(file[0])
-                        except BaseException:
+
+                        except Exception:
                             pass
 
             if not origin_paths and ".tm" not in product.lower():

@@ -82,7 +82,7 @@ def safe_make_directory(path):
         logging.info('-- Generated directory: %s  ', path)
         logging.info('')
 
-    except BaseException:
+    except Exception:
         pass
 
 
@@ -177,7 +177,8 @@ def type_to_pds3_type(kernel):
         # Kernel is an object
         #
         kernel_type = kernel_type_map[kernel.extension.upper()]
-    except BaseException:
+
+    except Exception:
         #
         # Kernel is a string
         #
@@ -255,7 +256,7 @@ def add_crs_to_file(file, eol, setup=False):
                     f.write(line)
         shutil.move(file_crs, file)
 
-    except BaseException:
+    except Exception:
         handle_npb_error(f"Carriage return adding error for {file}.", setup)
 
 
@@ -436,7 +437,8 @@ def mk_to_list(mk, setup):
                     #
                     path_symbol = "$" + line.split("'")[1]
                     get_symbol = False
-                except BaseException:
+
+                except Exception:
                     pass
 
     if not ker_mk_list:
@@ -492,7 +494,8 @@ def get_latest_kernel(
             kernels_with_path += [
                 f for f in os.listdir(f"{kernel_path}/") if re.search(pattern, f)
             ]
-        except BaseException:
+
+        except Exception:
             pass
 
     if mks:
@@ -525,7 +528,8 @@ def get_latest_kernel(
         #
         try:
             return kernels.pop()
-        except BaseException:
+
+        except Exception:
             logging.warning("        No kernels found with pattern %s", pattern)
             return []
     else:

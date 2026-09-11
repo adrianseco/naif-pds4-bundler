@@ -203,7 +203,7 @@ class OrbnumFileProduct(Product):
                 version_pattern = r"_[vV]\[0\-9\]*[\.]"
                 version_match = re.search(version_pattern, self._pattern)
                 pattern = ".".join(self._pattern.split(version_match.group(0)))
-            except BaseException:
+            except Exception:
                 #
                 # The pattern already does not have an explicit version
                 # number.
@@ -1105,7 +1105,7 @@ class OrbnumFileProduct(Product):
                         x for x in os.listdir(cov_path) if re.fullmatch(cov_patn, x)
                     ]
 
-                except BaseException:
+                except Exception:
                     cov_kers = []
 
                 #
@@ -1118,7 +1118,8 @@ class OrbnumFileProduct(Product):
                         cov_kers = [
                             x for x in os.listdir(cov_path) if re.fullmatch(cov_patn, x)
                         ]
-                    except BaseException:
+
+                    except Exception:
                         cov_kers = []
 
                     #
@@ -1127,13 +1128,15 @@ class OrbnumFileProduct(Product):
                     #
                     if not cov_kers:
                         cov_path = f"{self.setup.bundle_directory}/spice_kernels/spk"
+
                         try:
                             cov_kers = [
                                 x
                                 for x in os.listdir(cov_path)
                                 if re.fullmatch(cov_patn, x)
                             ]
-                        except BaseException:
+
+                        except Exception:
                             cov_kers = []
 
                 if cov_kers:
@@ -1258,7 +1261,8 @@ class OrbnumFileProduct(Product):
             try:
                 stop = parse_date(stop_time)
                 stop_time = stop.strftime("%Y-%m-%dT%H:%M:%SZ")
-            except BaseException:
+
+            except Exception:
                 #
                 # Exception to cope with orbnum files without all the ground
                 # set of parameters.

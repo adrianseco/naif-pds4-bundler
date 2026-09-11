@@ -476,7 +476,8 @@ class Setup:
             #
             try:
                 os.mkdir(cwd + os.sep + self.staging_directory)
-            except BaseException:
+
+            except Exception:
 
                 if self.faucet in ["plan", "list", "checks"]:
                     logging.warning('-- Staging directory cannot be created but'
@@ -747,7 +748,8 @@ class Setup:
                         if xml_tag in line:
                             line = line.rstrip()
                             xml_tab = len(line) - len(xml_tag)
-            except:
+
+            except Exception:
                 logging.warning(
                     "-- XML Template not found to determine XML Tab. It has been set to 2."
                 )
@@ -902,7 +904,8 @@ class Setup:
 
                 increment = True
 
-            except:
+            except Exception:
+
                 if self.pds_version == "4":
                     logging.warning(
                         "-- Bundle label not found. Checking previous kernel list."
@@ -938,7 +941,7 @@ class Setup:
 
                     increment = True
 
-                except:
+                except Exception:
 
                     logging.warning("-- This is the first release.")
 
@@ -1209,7 +1212,7 @@ class Setup:
         try:
             r = requests.get(pds_schematron_location, allow_redirects=True)
 
-        except BaseException:
+        except Exception:
 
             logging.warning(
                 '-- PDS Validate Tool configuration file not written.')
@@ -1226,7 +1229,7 @@ class Setup:
         try:
             r = requests.get(pds_schema_location, allow_redirects=True)
 
-        except BaseException:
+        except Exception:
 
             logging.warning(
                 '-- PDS Validate Tool configuration file not written.')
