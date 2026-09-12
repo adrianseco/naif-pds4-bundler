@@ -251,7 +251,7 @@ class TestSpiceKernelPDS3LabelWriteLabel:
     """Proves _trailing_blank_log=False actually suppresses write_label()'s
     trailing blank log line for the real SpiceKernelPDS3Label class."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def label(self, tmp_path):
         """Real SpiceKernelPDS3Label instance, __init__ bypassed, ready for
         a direct write_label() call."""

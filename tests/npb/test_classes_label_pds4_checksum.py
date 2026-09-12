@@ -287,40 +287,20 @@ class TestChecksumPDS4LabelIntegration:
     # ------------------------------------------------------------------
 
     def test_context_from_product_effect_on_context_fields(
-            self, env: tuple[MagicMock, MagicMock, Path, Path]) -> None:
+            self, env: tuple[MagicMock, MagicMock, Path, Path],
+            context_effect_helpers: SimpleNamespace) -> None:
         """Inherited _context_from_product=False must source MISSIONS/
         OBSERVERS/TARGETS from setup, not from the product."""
         setup, product, _, _ = env
 
-        # Diverge from setup's defaults ("MAVEN"/"MAVEN"/"Mars"). This class
-        # ignores these, but a regression to True would show them below.
-        product.missions = ['ProductMission']
-        product.observers = ['ProductObserver']
-        product.targets = ['ProductTarget']
-
-        # A matching context product is required, or get_missions/
-        # get_observers/get_targets raise NPBError before we can assert.
-        product.collection.bundle.context_products += [
-            {'name': ['ProductMission'], 'type': ['Mission'],
-             'lidvid': 'urn:nasa:pds:context:investigation:mission.productmission::1.0'},
-            {'name': ['ProductObserver'], 'type': ['Spacecraft'],
-             'lidvid': ('urn:nasa:pds:context:instrument_host:'
-                        'spacecraft.productobserver::1.0')},
-            {'name': ['ProductTarget'], 'type': ['Planet'],
-             'lidvid': 'urn:nasa:pds:context:target:planet.producttarget::1.0'},
-        ]
+        # product now differs from setup
+        context_effect_helpers.diverge(product)
 
         product.setup = setup
         label = ChecksumPDS4Label(product)
 
-        # setup's names must be the ones rendered...
-        assert 'MAVEN' in label._label_fields['MISSIONS']
-        assert 'MAVEN' in label._label_fields['OBSERVERS']
-        assert 'Mars' in label._label_fields['TARGETS']
-        # ...and the product's names must not leak in from the wrong branch.
-        assert 'ProductMission' not in label._label_fields['MISSIONS']
-        assert 'ProductObserver' not in label._label_fields['OBSERVERS']
-        assert 'ProductTarget' not in label._label_fields['TARGETS']
+        # setup must win
+        context_effect_helpers.assert_source(label, from_product=False)
 
     # ------------------------------------------------------------------
     # File creation and content
