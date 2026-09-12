@@ -841,6 +841,11 @@ class TestOrbnumFilePDS4LabelIntegration:
         without carrying the attribute over."""
         assert OrbnumFilePDS4Label._context_from_product is True
 
+    def test_trailing_blank_log_attribute_is_true(self):
+        """Pins _trailing_blank_log to PDSLabel's inherited default: this
+        class does not override it, so it must stay True."""
+        assert OrbnumFilePDS4Label._trailing_blank_log is True
+
     # ------------------------------------------------------------------
     # Fixtures
     # ------------------------------------------------------------------
@@ -882,6 +887,47 @@ class TestOrbnumFilePDS4LabelIntegration:
 
         # Return only the objects/paths needed by the integration tests.
         return setup, product, template_path, expected_label_path
+
+    # ------------------------------------------------------------------
+    # _context_from_product effect
+    # ------------------------------------------------------------------
+
+    def test_context_from_product_effect_on_context_fields(
+            self, env: tuple[MagicMock, MagicMock, Path, Path]) -> None:
+        """_context_from_product=True must source MISSIONS/OBSERVERS/TARGETS
+        from the product, not from setup."""
+        setup, product, _, _ = env
+
+        # Diverge from setup's defaults ("MAVEN"/"MAVEN"/"Mars") so the
+        # source actually used is visible below.
+        product.missions = ['ProductMission']
+        product.observers = ['ProductObserver']
+        product.targets = ['ProductTarget']
+
+        # A matching context product is required, or get_missions/
+        # get_observers/get_targets raise NPBError before we can assert.
+        product.collection.bundle.context_products += [
+            {'name': ['ProductMission'], 'type': ['Mission'],
+             'lidvid': 'urn:nasa:pds:context:investigation:mission.productmission::1.0'},
+            {'name': ['ProductObserver'], 'type': ['Spacecraft'],
+             'lidvid': ('urn:nasa:pds:context:instrument_host:'
+                        'spacecraft.productobserver::1.0')},
+            {'name': ['ProductTarget'], 'type': ['Planet'],
+             'lidvid': 'urn:nasa:pds:context:target:planet.producttarget::1.0'},
+        ]
+
+        product.setup = setup
+        label = OrbnumFilePDS4Label(product)
+
+        # The product's names must be the ones rendered...
+        assert 'ProductMission' in label._label_fields['MISSIONS']
+        assert 'ProductObserver' in label._label_fields['OBSERVERS']
+        assert 'ProductTarget' in label._label_fields['TARGETS']
+
+        # ...and setup's names must not leak in from the wrong branch.
+        assert 'MAVEN' not in label._label_fields['MISSIONS']
+        assert 'MAVEN' not in label._label_fields['OBSERVERS']
+        assert 'Mars' not in label._label_fields['TARGETS']
 
     # ------------------------------------------------------------------
     # File creation and content

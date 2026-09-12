@@ -484,6 +484,16 @@ TEMPLATE_CONTENT = (
 class TestInventoryPDS4LabelIntegration:
     """Integration tests for InventoryPDS4Label + PDSLabel + template."""
 
+    def test_context_from_product_attribute_is_false(self):
+        """Pins _context_from_product to PDSLabel's inherited default: this
+        class does not override it, so it must stay False."""
+        assert InventoryPDS4Label._context_from_product is False
+
+    def test_trailing_blank_log_attribute_is_true(self):
+        """Pins _trailing_blank_log to PDSLabel's inherited default: this
+        class does not override it, so it must stay True."""
+        assert InventoryPDS4Label._trailing_blank_log is True
+
     # ------------------------------------------------------------------
     # Fixtures
     # ------------------------------------------------------------------
@@ -526,6 +536,46 @@ class TestInventoryPDS4LabelIntegration:
             inventory.path.replace('.csv', '.xml').replace('inventory_', ''))
 
         return setup, collection, inventory, template_path, expected_label_path
+
+    # ------------------------------------------------------------------
+    # _context_from_product effect
+    # ------------------------------------------------------------------
+
+    def test_context_from_product_effect_on_context_fields(
+            self, env: tuple[MagicMock, MagicMock, MagicMock, Path, Path]) -> None:
+        """Inherited _context_from_product=False must source MISSIONS/
+        OBSERVERS/TARGETS from setup, not from the inventory product."""
+        setup, collection, inventory, _, _ = env
+
+        # Diverge from setup's defaults ("MAVEN"/"MAVEN"/"Mars"). This class
+        # ignores these, but a regression to True would show them below.
+        inventory.missions = ['ProductMission']
+        inventory.observers = ['ProductObserver']
+        inventory.targets = ['ProductTarget']
+
+        # A matching context product is required, or get_missions/
+        # get_observers/get_targets raise NPBError before we can assert.
+        inventory.collection.bundle.context_products += [
+            {'name': ['ProductMission'], 'type': ['Mission'],
+             'lidvid': 'urn:nasa:pds:context:investigation:mission.productmission::1.0'},
+            {'name': ['ProductObserver'], 'type': ['Spacecraft'],
+             'lidvid': ('urn:nasa:pds:context:instrument_host:'
+                        'spacecraft.productobserver::1.0')},
+            {'name': ['ProductTarget'], 'type': ['Planet'],
+             'lidvid': 'urn:nasa:pds:context:target:planet.producttarget::1.0'},
+        ]
+
+        inventory.setup = setup
+        label = InventoryPDS4Label(inventory, collection)
+
+        # setup's names must be the ones rendered...
+        assert 'MAVEN' in label._label_fields['MISSIONS']
+        assert 'MAVEN' in label._label_fields['OBSERVERS']
+        assert 'Mars' in label._label_fields['TARGETS']
+        # ...and the product's names must not leak in from the wrong branch.
+        assert 'ProductMission' not in label._label_fields['MISSIONS']
+        assert 'ProductObserver' not in label._label_fields['OBSERVERS']
+        assert 'ProductTarget' not in label._label_fields['TARGETS']
 
     # ------------------------------------------------------------------
     # File creation and content
